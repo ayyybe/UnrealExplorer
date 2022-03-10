@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option csharp_namespace = "UnrealExplorer.Common.Protos.Engine";
+
+message RequestEngineInfo {
+    uint32 process_id = 1;
+}
+
+message EngineInfo {
+    uint32 process_id = 1;
+    // TODO
+    // engine version? game name? player actor/camera info? idk
+    // this isn't really needed but would be kinda cool to have
+}

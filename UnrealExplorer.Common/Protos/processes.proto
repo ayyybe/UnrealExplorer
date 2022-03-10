@@ -1,0 +1,48 @@
+syntax = "proto3";
+import "errors.proto";
+
+option csharp_namespace = "UnrealExplorer.Common.Protos.Processes";
+  
+message ProcessInfo {
+    uint32 process_id = 1;
+    string name = 2;
+    string executable_path = 3;
+    bytes icon_png = 4;
+    CpuType process_arch = 5;
+    
+    enum CpuType {
+        X64 = 0;
+        X86 = 1;
+    }
+}
+
+message ProcessList {
+  repeated ProcessInfo processes = 1;
+}
+
+message AppInfo {
+    ProcessInfo process = 1;
+    string app_name = 2;
+}
+
+message AppList {
+  repeated AppInfo apps = 1;
+}
+
+message OpenProcess {
+    uint32 process_id = 1;
+}
+
+message OpenProcessResponse {
+    Reply result = 1;
+    uint32 process_id = 2;
+}
+
+message CloseProcess {
+    uint32 process_id = 1;
+}
+
+message CloseProcessResponse {
+    Reply result = 1;
+    uint32 process_id = 2;
+}

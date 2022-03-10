@@ -1,0 +1,141 @@
+﻿using System;
+using System.IO;
+using System.Net.Sockets;
+using System.Threading.Tasks;
+using System.Drawing;
+using System.Reflection;
+using Google.Protobuf;
+using UnrealExplorer.Common.Protos.Processes;
+
+namespace UnrealExplorer.AppServer.Bridge
+{
+    public class AppBridge
+    {
+        //public BridgeStream Stream { get; }
+
+        public TcpListener Server { get; }
+
+        public AppBridge(TcpListener server)
+        {
+            Server = server;
+        }
+
+        public async Task Start()
+        {
+            Server.Start(0);
+            await AcceptClient();
+        }
+
+        public void Stop()
+        {
+            Server.Stop();
+        }
+
+        private async Task AcceptClient()
+        {
+            TcpClient client = await Server.AcceptTcpClientAsync();
+            await HandleClient(client);
+        }
+
+        private async Task HandleClient(TcpClient client)
+        {
+            try
+            {
+                await using NetworkStream stream = client.GetStream();
+                //using BinaryReader br = new BinaryReader(stream);
+                //using BinaryWriter bw = new BinaryWriter(stream);
+
+                while (client.Connected)
+                {
+                    // Read msg type token (first byte)
+                    var tokenBuffer = new byte[1];
+                    await stream.ReadAsync(tokenBuffer.AsMemory(0, 1));
+                    var token = (MessageToken) tokenBuffer[0];
+
+                    // Interpret the rest of the data (if applicable) based on token type
+                    switch (token)
+                    {
+                        case MessageToken.NoOp:
+                            Console.WriteLine("noop received from bridge client");
+                            break;
+                        case MessageToken.Ping:
+                            Console.WriteLine("ping received from bridge client");
+                            stream.WriteByte((byte) MessageToken.Pong);
+                            stream.WriteByte(0);
+                            // TODO move to thingy to standardize stuff
+                            break;
+                        case MessageToken.Pong:
+                            Console.WriteLine("pong received from bridge client");
+                            break;
+                        case MessageToken.RequestProcessList:
+                            ProcessList processList = new ProcessList
+                            {
+                                Processes =
+                                {
+                                    new ProcessInfo
+                                    {
+                                        ProcessId = 123,
+                                        Name = "AsdfYeet",
+                                        ExecutablePath = "C:\\urmom.exe",
+                                        IconPng = ByteString.Empty,
+                                        ProcessArch = ProcessInfo.Types.CpuType.X64
+                                    },
+                                    new ProcessInfo
+                                    {
+                                        ProcessId = 456,
+                                        Name = "NuUuUuU222",
+                                        ExecutablePath = "C:\\yeet\\skeet.exe",
+                                        IconPng = ByteString.Empty,
+                                        ProcessArch = ProcessInfo.Types.CpuType.X86
+                                    }
+                                }
+                            };
+
+                            stream.WriteByte((byte) MessageToken.ProcessList);
+                            processList.WriteDelimitedTo(stream);
+
+                            break;
+                        case MessageToken.OpenProcess:
+                            break;
+                        case MessageToken.CloseProcess:
+                            break;
+                        case MessageToken.RequestEngineInfo:
+                            break;
+                        case MessageToken.MemorySubscribe:
+                            break;
+                        case MessageToken.MemoryUnsubscribe:
+                            break;
+                        case MessageToken.EditValue:
+                            break;
+                        case MessageToken.DEBUG_ReadBytes:
+                            break;
+                        case MessageToken.DEBUG_WriteBytes:
+                            break;
+                        case MessageToken.ProcessList:
+                        case MessageToken.EngineInfo:
+                        case MessageToken.MemoryChanges:
+                        case MessageToken.DEBUG_ReadBytesResponse:
+                        case MessageToken.DEBUG_WriteBytesResponse:
+                            // These tokens should only be sent by the server, and don't make sense coming from the app
+                            Console.WriteLine("kicked bridge client (inappropriate token)");
+                            client.Close();
+                            await AcceptClient();
+                            break;
+                        default:
+                            // If unknown/unimplemented token then kick client
+                            Console.WriteLine("kicked bridge client (bad token)");
+                            client.Close();
+                            await AcceptClient();
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ex: " + ex.Message);
+                client.Close();
+                await AcceptClient();
+            }
+        }
+    }
+}

@@ -1,0 +1,1 @@
+declare var AppBridge: import('../common/bridge/bridge_proxy').default;

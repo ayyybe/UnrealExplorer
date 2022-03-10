@@ -1,0 +1,64 @@
+syntax = "proto3";
+import "errors.proto";
+
+option csharp_namespace = "UnrealExplorer.Common.Protos.Subscriptions";
+
+// use this for hex editor and/or debugging
+message MemorySubscribe {
+    uint32 process_id = 1;
+    int64 start_address = 2; // todo: 32 bit support
+    uint32 byte_count = 3;
+    uint32 request_ref = 4;
+}
+
+message MemorySubscribeResponse {
+    Reply result = 1;
+    uint32 ref = 2;
+    uint32 request_ref = 3;
+}
+
+message MemoryUnsubscribe {
+    uint32 ref = 1;
+}
+
+message MemoryUnsubscribeResponse {
+    Reply result = 1;
+    uint32 ref = 2;
+}
+
+message MemoryUpdate {
+    uint32 subscription_ref = 1;
+    bytes new_data = 2;
+}
+
+// use this for everything else
+message ObjectSubscribe {
+    uint32 process_id = 1;
+    int64 object_address = 2;
+    bool watch_structs = 3;
+}
+
+message ObjectSubscribeResponse {
+    Reply result = 1;
+    uint32 ref = 2;
+}
+
+message ObjectUnsubscribe {
+    uint32 ref = 1;
+}
+
+message ObjectUnsubscribeResponse {
+    Reply result = 1;
+    uint32 ref = 2;
+}
+
+// avoiding adding this for now,
+/*message EditValue {
+    int64 address = 1;
+    oneof value_type {
+        bool bool_value = 2;
+        double double_value = 3;
+        float float_value = 4;
+        float float_value = 5;
+    }
+}*/

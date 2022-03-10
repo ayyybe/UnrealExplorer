@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option csharp_namespace = "UnrealExplorer.Common.Protos.Errors";
+
+enum ErrorCode {
+    Success = 0;
+    Failed = 1;
+
+    UnknownError = 2;
+    AccessDenied = 3;
+
+    ProcessNotOpen = 10;
+    ProcessAlreadyOpen = 11;
+
+    ReadFailed = 20;
+    WriteFailed = 21;
+
+    RefNotFound = 90;
+}
+
+message Reply {
+    ErrorCode status = 1;
+    string message = 2;
+}
